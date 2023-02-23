@@ -11,7 +11,7 @@ class Database():
     @staticmethod
     def connect():
         """ Builds the enums for the API. """
-        return create_async_engine(consts.CONNECT_STR, echo=True, future=True)
+        return create_async_engine(consts.CONNECT_STR, echo=False, future=True)
 
     def __new__(cls):
         if not hasattr(cls, '_instance'):
@@ -45,7 +45,6 @@ class Database():
         for row in data:
             async with self.engine.connect() as conn:
                 row['result'] = None
-                print(row)
                 await conn.execute(insert(consts.MATCH_PLAYER_TABLE).values(**row))
                 await conn.commit()
 
@@ -70,3 +69,13 @@ class Database():
             )).fetchone()
             assert result is not None
             return result[0]
+
+    async def query_ongoing_match(self):
+        async with self.engine.connect() as conn:
+            result = (await conn.execute(
+                select(consts.ONGOING_MATCH_TABLE.c.matchId)
+            )).all()
+            return {_[0] for _ in result}
+
+    async def close(self):
+        await self.engine.dispose()

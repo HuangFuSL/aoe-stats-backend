@@ -1,6 +1,6 @@
 import asyncio
 import datetime
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 import aiohttp
 import requests
@@ -52,7 +52,6 @@ async def get_ongoing_matches() -> List[Dict[str, Any]]:
             if '#' in _['location']:
                 _['locationId'] = int(_['location'].split('#')[1])
             else:
-                print(_['location'])
                 assert False
         del _['location']
         _['solo'] = len(_['players']) == 2

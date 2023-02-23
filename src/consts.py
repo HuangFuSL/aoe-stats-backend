@@ -1,4 +1,9 @@
-from sqlalchemy import ForeignKey, Table, Column, Integer, MetaData, SmallInteger, Boolean, DateTime
+import os
+
+from sqlalchemy import (
+    Boolean, Column, DateTime, ForeignKey, Integer,
+    MetaData, SmallInteger, Table
+)
 
 # NETWORK
 
@@ -21,7 +26,7 @@ UNUSED_PLAYER_FIELDS = (
 
 # DATABASE
 
-CONNECT_STR = 'postgresql+asyncpg://<user>:<password>@<host>:<port>/<database>'
+CONNECT_STR = f'postgresql+asyncpg://{os.environ["DB_USER"]}:{os.environ["DB_PASS"]}@{os.environ["DB_HOST"]}:5432/aoe2'
 
 m = MetaData()
 MATCH_TABLE = Table(
@@ -50,4 +55,9 @@ MATCH_PLAYER_TABLE = Table(
     Column('team', SmallInteger, nullable=True),
     Column('civ', SmallInteger, nullable=False),
     Column('result', Boolean, nullable=True)
+)
+ONGOING_MATCH_TABLE = Table(
+    'ongoing',
+    m,
+    Column('matchId', ForeignKey('match.matchId'), primary_key=True, nullable=False)
 )
