@@ -1,0 +1,46 @@
+name: Run spider
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  schedule:
+    - cron: '0/5 * * * *'
+  workflow_dispatch:
+
+env:
+  DB_USER: secrets.DB_USER
+  DB_PASS: secrets.DB_PASS
+  DB_HOST: secrets.DB_HOST
+
+jobs:
+  run:
+    name: Run spider
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Master
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Restoring packages
+        uses: actions/cache@v3
+        id: cache
+        with:
+          path: ~/.local
+          key: ${{ steps.python.outputs.python-version }}-${{ hashFiles('requirements.txt') }}
+
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements.txt --user --no-warn-script-location
+
+      - name: Run spider
+        run: |
+          python3 -m src
