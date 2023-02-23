@@ -26,6 +26,7 @@ UNUSED_PLAYER_FIELDS = (
 
 # DATABASE
 
+print(os.environ["DB_HOST"])
 CONNECT_STR = f'postgresql+asyncpg://{os.environ["DB_USER"]}:{os.environ["DB_PASS"]}@{os.environ["DB_HOST"]}:5432/aoe2'
 
 m = MetaData()
