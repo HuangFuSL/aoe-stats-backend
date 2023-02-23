@@ -1,6 +1,6 @@
 import asyncio
 import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 import aiohttp
 import requests
@@ -61,7 +61,7 @@ async def get_ongoing_matches() -> List[Dict[str, Any]]:
 
     return ret['data']
 
-async def query_match_result(matchId: int, profileId: int) -> List[Dict[str, Any]]:
+async def query_match_result(matchId: int, profileId: int) -> Tuple[int, List[Dict[str, Any]]]:
     data = {
         'game': 'age2',
         'gameId': str(matchId),
@@ -69,10 +69,11 @@ async def query_match_result(matchId: int, profileId: int) -> List[Dict[str, Any
     }
     async with aiohttp.ClientSession() as session:
         async with session.post(consts.MATCH_RESULT_URL, json=data) as resp:
-            result = (await resp.json(content_type=None))['playerList']
+            result = (await resp.json(content_type=None))
     ret = []
-    for _ in result:
+    length = result['matchSummary']['matchLength']
+    for _ in result['playerList']:
         ret.append({
             'matchId': matchId, 'profileId': int(_['userId']), 'result': _['winLoss'] == 'Win'
         })
-    return ret
+    return length, ret

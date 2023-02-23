@@ -2,7 +2,7 @@ import os
 
 from sqlalchemy import (
     Boolean, Column, DateTime, ForeignKey, Integer,
-    MetaData, SmallInteger, Table
+    MetaData, SmallInteger, Table, Double
 )
 
 # NETWORK
@@ -42,7 +42,8 @@ MATCH_TABLE = Table(
     Column('startingAgeId', SmallInteger, nullable=True),
     Column('started', DateTime, nullable=True),
     Column('ended', Boolean, nullable=False),
-    Column('solo', Boolean, nullable=False)
+    Column('solo', Boolean, nullable=False),
+    Column('length', Double, nullable=True)
 )
 MATCH_PLAYER_TABLE = Table(
     'matchplayers',

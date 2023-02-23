@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import and_, bindparam, insert, select, update
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -32,12 +32,12 @@ class Database():
                 await conn.execute(insert(consts.MATCH_TABLE).values(**row))
                 await conn.commit()
 
-    async def update_matches(self, matchId: int):
+    async def update_matches(self, matchId: int, length: Optional[int] = None):
         async with self.engine.connect() as conn:
             await conn.execute(
                 update(consts.MATCH_TABLE) \
                 .where(consts.MATCH_TABLE.c.matchId == matchId)
-                .values(ended=True)
+                .values(ended=True, length=length)
             )
             await conn.commit()
 

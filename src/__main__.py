@@ -4,8 +4,8 @@ from . import api, db
 
 
 async def query_and_update(matchId: int, profileId: int):
-    result = await api.query_match_result(matchId, profileId)
-    await db.Database().update_matches(matchId)
+    length, result = await api.query_match_result(matchId, profileId)
+    await db.Database().update_matches(matchId, length)
     await asyncio.sleep(0.5)
     await db.Database().update_players([{'_' + k: v for k, v in _.items()} for _ in result])
 
