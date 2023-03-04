@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import and_, bindparam, insert, select, update
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -13,7 +13,7 @@ class Database():
         """ Builds the enums for the API. """
         return create_async_engine(
             consts.CONNECT_STR, echo=False, future=True,
-            pool_size=50, max_overflow=100
+            pool_size=200, max_overflow=50
         )
 
     def __new__(cls):
@@ -35,13 +35,14 @@ class Database():
                 await conn.execute(insert(consts.MATCH_TABLE).values(**row))
                 await conn.commit()
 
-    async def update_matches(self, matchId: int, length: Optional[int] = None):
+    async def update_matches(self, *args: Tuple[int, Optional[int]]):
         async with self.engine.connect() as conn:
-            await conn.execute(
-                update(consts.MATCH_TABLE) \
-                .where(consts.MATCH_TABLE.c.matchId == matchId)
-                .values(ended=True, length=length)
-            )
+            for matchId, length in args:
+                await conn.execute(
+                    update(consts.MATCH_TABLE) \
+                    .where(consts.MATCH_TABLE.c.matchId == matchId)
+                    .values(ended=True, length=length)
+                )
             await conn.commit()
 
     async def insert_new_players(self, data: List[Dict[str, Any]]):
@@ -70,7 +71,8 @@ class Database():
                 select(consts.MATCH_PLAYER_TABLE.c.profileId)
                 .where(consts.MATCH_PLAYER_TABLE.c.matchId == matchId)
             )).fetchone()
-            assert result is not None
+            if result is None:
+                return None
             return result[0]
 
     async def query_ongoing_match(self):

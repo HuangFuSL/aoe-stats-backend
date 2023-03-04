@@ -3,12 +3,6 @@ import asyncio
 from . import api, db
 
 
-async def query_and_update(matchId: int, profileId: int):
-    length, result = await api.query_match_result(matchId, profileId)
-    await db.Database().update_matches(matchId, length)
-    await asyncio.sleep(0.5)
-    await db.Database().update_players([{'_' + k: v for k, v in _.items()} for _ in result])
-
 async def one_step():
     ongoing_match_id = await db.Database().query_ongoing_match()
     current = await api.get_ongoing_matches()
@@ -32,15 +26,25 @@ async def one_step():
     await asyncio.sleep(5)
     print(f'Added {len(new_match)} matches')
     print(f'Added {len(new_match_players)} players')
+    print(f'Finished {len(end_match)} matches')
 
     r = await asyncio.gather(*map(db.Database().query_one_player, end_match))
+    matches, records = [], []
     for matchId, profileId in zip(end_match, r):
+        if profileId is None:
+            continue
         try:
-            await asyncio.gather(query_and_update(matchId, profileId), asyncio.sleep(0.3))
+            (length, result), _ = await asyncio.gather(api.query_match_result(matchId, profileId), asyncio.sleep(1))
+            matches.append((matchId, length))
+            records.extend([{'_' + k: v for k, v in _.items()} for _ in result])
         except TypeError:
             pass
+    if matches:
+        await db.Database().update_matches(*matches)
+    if records:
+        await db.Database().update_players(records)
 
-    print(f'Finished {len(end_match)} matches')
+    print('Finished')
     await db.Database().close()
 
 async def main():
