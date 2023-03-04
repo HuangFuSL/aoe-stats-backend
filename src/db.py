@@ -11,7 +11,10 @@ class Database():
     @staticmethod
     def connect():
         """ Builds the enums for the API. """
-        return create_async_engine(consts.CONNECT_STR, echo=False, future=True)
+        return create_async_engine(
+            consts.CONNECT_STR, echo=False, future=True,
+            pool_size=50, max_overflow=100
+        )
 
     def __new__(cls):
         if not hasattr(cls, '_instance'):
