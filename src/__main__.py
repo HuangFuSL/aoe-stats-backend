@@ -36,8 +36,7 @@ async def one_step():
     r = await asyncio.gather(*map(db.Database().query_one_player, end_match))
     for matchId, profileId in zip(end_match, r):
         try:
-            await query_and_update(matchId, profileId)
-            await asyncio.sleep(1)
+            await asyncio.gather(query_and_update(matchId, profileId), asyncio.sleep(0.3))
         except TypeError:
             pass
 

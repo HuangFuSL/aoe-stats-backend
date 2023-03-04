@@ -76,7 +76,7 @@ class Database():
     async def query_ongoing_match(self):
         async with self.engine.connect() as conn:
             result = (await conn.execute(
-                select(consts.ONGOING_MATCH_TABLE.c.matchId)
+                select(consts.ONGOING_MATCH_TABLE.c.matchId).limit(2000)
             )).all()
             return {_[0] for _ in result}
 
