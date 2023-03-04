@@ -37,7 +37,8 @@ async def one_step():
             (length, result), _ = await asyncio.gather(api.query_match_result(matchId, profileId), asyncio.sleep(1))
             matches.append((matchId, length))
             records.extend([{'_' + k: v for k, v in _.items()} for _ in result])
-        except TypeError:
+            print(len(matches), len(records))
+        except:
             pass
     if matches:
         await db.Database().update_matches(*matches)
