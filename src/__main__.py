@@ -28,7 +28,7 @@ async def one_step():
     print(f'Added {len(new_match_players)} players')
     print(f'Finished {len(end_match)} matches')
 
-    r = await asyncio.gather(*map(db.Database().query_one_player, end_match))
+    r = await db.Database().query_players(*end_match)
     matches, records = [], []
     for matchId, profileId in r:
         if profileId is None:

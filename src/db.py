@@ -65,7 +65,7 @@ class Database():
             )
             await conn.commit()
 
-    async def query_one_player(self, *matchIds: int) -> List[Tuple[int, int]]:
+    async def query_players(self, *matchIds: int) -> List[Tuple[int, int]]:
         async with self.engine.connect() as conn:
             result = (await conn.execute(
                 select(
