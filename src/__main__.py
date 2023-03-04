@@ -30,7 +30,7 @@ async def one_step():
 
     r = await asyncio.gather(*map(db.Database().query_one_player, end_match))
     matches, records = [], []
-    for matchId, profileId in zip(end_match, r):
+    for matchId, profileId in r:
         if profileId is None:
             continue
         try:

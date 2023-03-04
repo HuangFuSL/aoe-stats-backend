@@ -65,15 +65,16 @@ class Database():
             )
             await conn.commit()
 
-    async def query_one_player(self, matchId: int):
+    async def query_one_player(self, *matchIds: int) -> List[Tuple[int, int]]:
         async with self.engine.connect() as conn:
             result = (await conn.execute(
-                select(consts.MATCH_PLAYER_TABLE.c.profileId)
-                .where(consts.MATCH_PLAYER_TABLE.c.matchId == matchId)
-            )).fetchone()
-            if result is None:
-                return None
-            return result[0]
+                select(
+                    consts.MATCH_PLAYER_TABLE.c.matchId.distinct(),
+                    consts.MATCH_PLAYER_TABLE.c.profileId
+                )
+                .where(consts.MATCH_PLAYER_TABLE.c.matchId.in_(matchIds))
+            )).all()
+            return result
 
     async def query_ongoing_match(self):
         async with self.engine.connect() as conn:
