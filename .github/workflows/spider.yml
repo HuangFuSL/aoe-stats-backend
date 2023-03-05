@@ -11,6 +11,8 @@ env:
   DB_USER: ${{ secrets.DB_USER }}
   DB_PASS: ${{ secrets.DB_PASS }}
   DB_HOST: ${{ secrets.DB_HOST }}
+  ci: 1
+  fc: 0
 
 jobs:
   run:
