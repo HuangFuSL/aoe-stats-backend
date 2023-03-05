@@ -22,28 +22,12 @@ async def one_step():
 
     await db.Database().insert_new_matches(new_match)
     await asyncio.sleep(5)
+    print(f'Added {len(new_match)} matches')
     await db.Database().insert_new_players(new_match_players)
     await asyncio.sleep(5)
-    print(f'Added {len(new_match)} matches')
     print(f'Added {len(new_match_players)} players')
+    await db.Database().update_matches(*end_match)
     print(f'Finished {len(end_match)} matches')
-
-    r = await db.Database().query_players(*end_match)
-    matches, records = [], []
-    for matchId, profileId in r:
-        if profileId is None:
-            continue
-        try:
-            (length, result), _ = await asyncio.gather(api.query_match_result(matchId, profileId), asyncio.sleep(1))
-            matches.append((matchId, length))
-            records.extend([{'_' + k: v for k, v in _.items()} for _ in result])
-            print(len(matches), len(records))
-        except:
-            pass
-    if matches:
-        await db.Database().update_matches(*matches)
-    if records:
-        await db.Database().update_players(records)
 
     print('Finished')
     await db.Database().close()

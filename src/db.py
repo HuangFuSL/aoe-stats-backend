@@ -35,13 +35,13 @@ class Database():
                 await conn.execute(insert(consts.MATCH_TABLE).values(**row))
                 await conn.commit()
 
-    async def update_matches(self, *args: Tuple[int, Optional[int]]):
+    async def update_matches(self, *args: int):
         async with self.engine.connect() as conn:
-            for matchId, length in args:
+            for matchId in args:
                 await conn.execute(
                     update(consts.MATCH_TABLE) \
                     .where(consts.MATCH_TABLE.c.matchId == matchId)
-                    .values(ended=True, length=length)
+                    .values(ended=True, length=None)
                 )
             await conn.commit()
 
