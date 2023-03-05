@@ -45,6 +45,16 @@ class Database():
                 )
             await conn.commit()
 
+    async def complete_matches(self, *args: Tuple[int, Optional[int]]):
+        async with self.engine.connect() as conn:
+            for matchId, length in args:
+                await conn.execute(
+                    update(consts.MATCH_TABLE) \
+                    .where(consts.MATCH_TABLE.c.matchId == matchId)
+                    .values(ended=True, length=length)
+                )
+            await conn.commit()
+
     async def insert_new_players(self, data: List[Dict[str, Any]]):
         for row in data:
             async with self.engine.connect() as conn:
@@ -64,6 +74,14 @@ class Database():
                 data
             )
             await conn.commit()
+
+
+    async def query_finished(self) -> List[int]:
+        async with self.engine.connect() as conn:
+            result = (await conn.execute(
+                select(consts.FINISHED_MATCH_TABLE.c.matchId).limit(20)
+            )).all()
+            return [_[0] for _ in result]
 
     async def query_players(self, *matchIds: int) -> List[Tuple[int, int]]:
         async with self.engine.connect() as conn:

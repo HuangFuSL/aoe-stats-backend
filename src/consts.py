@@ -62,3 +62,8 @@ ONGOING_MATCH_TABLE = Table(
     m,
     Column('matchId', ForeignKey('match.matchId'), primary_key=True, nullable=False)
 )
+FINISHED_MATCH_TABLE = Table(
+    'finished',
+    m,
+    Column('matchId', ForeignKey('match.matchId'), primary_key=True, nullable=False)
+)
