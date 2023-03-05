@@ -52,7 +52,7 @@ async def get_ongoing_matches() -> List[Dict[str, Any]]:
             if '#' in _['location']:
                 _['locationId'] = int(_['location'].split('#')[1])
             else:
-                assert False
+                _['locationId'] = None
         del _['location']
         _['solo'] = len(_['players']) == 2
         _['started'] = datetime.datetime.fromtimestamp(_['started'])
