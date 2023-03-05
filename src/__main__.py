@@ -44,7 +44,7 @@ async def update():
         if profileId is None:
             continue
         try:
-            (length, result), _ = await asyncio.gather(api.query_match_result(matchId, profileId), asyncio.sleep(1))
+            (length, result), _ = await asyncio.gather(api.query_match_result(matchId, profileId), asyncio.sleep(0.6))
             if length is None:
                 length = -1
             matches.append((matchId, length))
@@ -53,6 +53,8 @@ async def update():
             matches.append((matchId, -1))
 
         print(len(matches), len(records))
+    for matchId in set(matchIds) - set(r):
+        matches.append((matchId, -1))
     if matches:
         await db.Database().complete_matches(*matches)
     if records:

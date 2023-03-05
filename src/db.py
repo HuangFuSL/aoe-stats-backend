@@ -79,7 +79,7 @@ class Database():
     async def query_finished(self) -> List[int]:
         async with self.engine.connect() as conn:
             result = (await conn.execute(
-                select(consts.FINISHED_MATCH_TABLE.c.matchId).limit(20)
+                select(consts.FINISHED_MATCH_TABLE.c.matchId).limit(30)
             )).all()
             return [_[0] for _ in result]
 
