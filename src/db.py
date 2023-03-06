@@ -36,7 +36,7 @@ class Database():
                 try:
                     await conn.execute(insert(consts.MATCH_TABLE).values(**row))
                 except IntegrityError:
-                    pass
+                    await conn.rollback()
                 else:
                     await conn.commit()
 
@@ -67,7 +67,7 @@ class Database():
                     row['result'] = None
                     await conn.execute(insert(consts.MATCH_PLAYER_TABLE).values(**row))
                 except IntegrityError:
-                    pass
+                    await conn.rollback()
                 else:
                     await conn.commit()
 
