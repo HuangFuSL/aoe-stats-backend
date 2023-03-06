@@ -37,7 +37,8 @@ class Database():
                     await conn.execute(insert(consts.MATCH_TABLE).values(**row))
                 except IntegrityError:
                     pass
-                await conn.commit()
+                else:
+                    await conn.commit()
 
     async def update_matches(self, *args: int):
         async with self.engine.connect() as conn:
@@ -60,11 +61,15 @@ class Database():
             await conn.commit()
 
     async def insert_new_players(self, data: List[Dict[str, Any]]):
-        for row in data:
-            async with self.engine.connect() as conn:
-                row['result'] = None
-                await conn.execute(insert(consts.MATCH_PLAYER_TABLE).values(**row))
-                await conn.commit()
+        async with self.engine.connect() as conn:
+            for row in data:
+                try:
+                    row['result'] = None
+                    await conn.execute(insert(consts.MATCH_PLAYER_TABLE).values(**row))
+                except IntegrityError:
+                    pass
+                else:
+                    await conn.commit()
 
     async def update_players(self, data: List[Dict[str, Any]]):
         async with self.engine.connect() as conn:
