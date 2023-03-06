@@ -1,9 +1,8 @@
-import asyncio
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import and_, bindparam, insert, select, update
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.exc import IntegrityError
 
 from . import consts
 
@@ -23,72 +22,64 @@ class Database():
             cls._instance = super(Database, cls).__new__(cls)
             cls._engine = None
             cls._conn = None
-            cls._insert_pool = None
-            cls._queue = None
         return cls._instance
-
-    @property
-    def queue(self):
-        if self._queue is None:
-            self._queue = asyncio.Queue()
-        return self._queue
+    
+    async def conn(self):
+        if self._conn is None:
+            self._conn = await self.engine.connect()
+        return self._conn
 
     @property
     def engine(self):
         if self._engine is None:
             self._engine = self.connect()
         return self._engine
-    
-    async def conn(self):
-        if self._conn is None:
-            self._conn = await self.engine.connect()
-        self._insert_pool = asyncio.create_task(self.insert_pool(self.queue))
-        return self._conn
 
-    async def insert_pool(self, queue: asyncio.Queue):
+    async def insert_new_matches(self, data: List[Dict[str, Any]]):
         conn = await self.conn()
-        while True:
-            stmt = await queue.get()
-            if stmt is None:
-                break
+        for row in data:
+            row['ended'] = False
             try:
-                await conn.execute(*stmt)
+                await conn.execute(insert(consts.MATCH_TABLE).values(**row))
             except IntegrityError:
                 await conn.rollback()
             else:
                 await conn.commit()
 
-    async def execute(self, *stmt):
-        await self.queue.put(stmt)
-
-    async def insert_new_matches(self, data: List[Dict[str, Any]]):
-        for row in data:
-            row['ended'] = False
-            await self.execute(insert(consts.MATCH_TABLE).values(**row))
-
     async def update_matches(self, *args: int):
+        conn = await self.conn()
         for matchId in args:
-            await self.execute(
-                update(consts.MATCH_TABLE)
+            await conn.execute(
+                update(consts.MATCH_TABLE) \
                 .where(consts.MATCH_TABLE.c.matchId == matchId)
                 .values(ended=True, length=None)
             )
+        await conn.commit()
 
     async def complete_matches(self, *args: Tuple[int, Optional[int]]):
+        conn = await self.conn()
         for matchId, length in args:
-            await self.execute(
+            await conn.execute(
                 update(consts.MATCH_TABLE) \
                 .where(consts.MATCH_TABLE.c.matchId == matchId)
                 .values(ended=True, length=length)
             )
+        await conn.commit()
 
     async def insert_new_players(self, data: List[Dict[str, Any]]):
+        conn = await self.conn()
         for row in data:
-            row['result'] = None
-            await self.execute(insert(consts.MATCH_PLAYER_TABLE).values(**row))
+            try:
+                row['result'] = None
+                await conn.execute(insert(consts.MATCH_PLAYER_TABLE).values(**row))
+            except IntegrityError:
+                await conn.rollback()
+            else:
+                await conn.commit()
 
     async def update_players(self, data: List[Dict[str, Any]]):
-        await self.execute(
+        conn = await self.conn()
+        await conn.execute(
             update(consts.MATCH_PLAYER_TABLE) \
             .where(and_(
                 consts.MATCH_PLAYER_TABLE.c.matchId == bindparam('_matchId'),
@@ -97,6 +88,8 @@ class Database():
             .values(result=bindparam('_result')),
             data
         )
+        await conn.commit()
+
 
     async def query_finished(self) -> List[int]:
         conn = await self.conn()
@@ -124,9 +117,6 @@ class Database():
         return {_[0] for _ in result}
 
     async def close(self):
-        if self._insert_pool is not None:
-            await self.queue.put(None)
-            await self._insert_pool
         if self._conn is not None:
             await self._conn.close()
         await self.engine.dispose()
