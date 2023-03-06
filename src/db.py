@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import and_, bindparam, insert, select, update
 from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.exc import IntegrityError
 
 from . import consts
 
@@ -29,10 +30,13 @@ class Database():
         return self._engine
 
     async def insert_new_matches(self, data: List[Dict[str, Any]]):
-        for row in data:
-            async with self.engine.connect() as conn:
+        async with self.engine.connect() as conn:
+            for row in data:
                 row['ended'] = False
-                await conn.execute(insert(consts.MATCH_TABLE).values(**row))
+                try:
+                    await conn.execute(insert(consts.MATCH_TABLE).values(**row))
+                except IntegrityError:
+                    pass
                 await conn.commit()
 
     async def update_matches(self, *args: int):
